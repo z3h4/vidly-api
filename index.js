@@ -1,7 +1,6 @@
 require('express-async-errors');
 const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
-const mongoose = require('mongoose');
 const config = require('config');
 const express = require('express');
 const genres = require('./routes/genres');
@@ -13,18 +12,12 @@ const auth = require('./routes/auth');
 const error = require('./middleware/error');
 const app = express();
 
+require('./startup/db')();
+
 if (!config.get('jwtPrivateKey')) {
   console.error('FATAL ERROR: jwtPrivateKey is not defined.');
   process.exit(1);
 }
-
-mongoose
-  .connect('mongodb://localhost/vidly', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
-  .then(() => console.log('Connected to vidly database...'))
-  .catch(err => console.log('Could not connect to the database...!'));
 
 app.use(express.json());
 app.use('/api/genres', genres);
@@ -36,4 +29,6 @@ app.use('/api/auth', auth);
 app.use(error);
 
 const port = process.env.PORT | 3000;
-app.listen(port, () => console.log(`Listening to port ${port}`));
+const server = app.listen(port, () => console.log(`Listening to port ${port}`));
+
+module.exports = server;
